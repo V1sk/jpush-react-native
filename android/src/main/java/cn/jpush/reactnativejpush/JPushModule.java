@@ -3,6 +3,8 @@ package cn.jpush.reactnativejpush;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -21,7 +23,6 @@ import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-
 
 import org.json.JSONObject;
 
@@ -177,7 +178,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
                             .emit(mEvent, map);
                     break;
             }
-                 
+
             mEvent = null;
             mCachedBundle = null;
         }
@@ -185,7 +186,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
         if (mRidEvent != null) {
             Logger.i(TAG, "Sending ridevent : " + mRidEvent);
             if (mGetRidCallback != null) {
-                mGetRidCallback.invoke(mRidBundle.getString(JPushInterface.EXTRA_REGISTRATION_ID));
+                mGetRidCallback.invoke(mCachedBundle.getString(JPushInterface.EXTRA_REGISTRATION_ID));
                 mGetRidCallback = null;
             }
             mRAC.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
@@ -209,7 +210,8 @@ public class JPushModule extends ReactContextBaseJavaModule {
      * JPush v3.0.7 Add this API
      * See document https://docs.jiguang.cn/jpush/client/Android/android_api/#aliastag for detail
      * Set tags
-     * @param tags tags array
+     *
+     * @param tags     tags array
      * @param callback callback
      */
     @ReactMethod
@@ -227,10 +229,12 @@ public class JPushModule extends ReactContextBaseJavaModule {
         String date = sdf.format(new Date());
         return Integer.valueOf(date);
     }
+
     /**
      * JPush v3.0.7 Add this API
      * See document https://docs.jiguang.cn/jpush/client/Android/android_api/#aliastag for detail
-     * @param tags tags to be added
+     *
+     * @param tags     tags to be added
      * @param callback callback
      */
     @ReactMethod
@@ -245,7 +249,8 @@ public class JPushModule extends ReactContextBaseJavaModule {
     /**
      * JPush v3.0.7 Add this API
      * See document https://docs.jiguang.cn/jpush/client/Android/android_api/#aliastag for detail
-     * @param tags tags to be deleted
+     *
+     * @param tags     tags to be deleted
      * @param callback callback
      */
     @ReactMethod
@@ -258,9 +263,10 @@ public class JPushModule extends ReactContextBaseJavaModule {
     }
 
     /**
-     *  JPush v3.0.7 Add this API
+     * JPush v3.0.7 Add this API
      * See document https://docs.jiguang.cn/jpush/client/Android/android_api/#aliastag for detail
      * Clean all tags
+     *
      * @param callback callback
      */
     @ReactMethod
@@ -272,9 +278,10 @@ public class JPushModule extends ReactContextBaseJavaModule {
     }
 
     /**
-     *  JPush v3.0.7 Add this API
+     * JPush v3.0.7 Add this API
      * See document https://docs.jiguang.cn/jpush/client/Android/android_api/#aliastag for detail
      * Get all tags
+     *
      * @param callback callback
      */
     @ReactMethod
@@ -297,10 +304,11 @@ public class JPushModule extends ReactContextBaseJavaModule {
     }
 
     /**
-     *  JPush v3.0.7 Add this API
+     * JPush v3.0.7 Add this API
      * See document https://docs.jiguang.cn/jpush/client/Android/android_api/#aliastag for detail
      * Check tag bind state
-     * @param tag Tag to be checked
+     *
+     * @param tag      Tag to be checked
      * @param callback callback
      */
     @ReactMethod
@@ -312,9 +320,10 @@ public class JPushModule extends ReactContextBaseJavaModule {
     }
 
     /**
-     *  JPush v3.0.7 Add this API
+     * JPush v3.0.7 Add this API
      * See document https://docs.jiguang.cn/jpush/client/Android/android_api/#aliastag for detail
      * Set alias
+     *
      * @param alias alias to be set
      */
     @ReactMethod
@@ -326,29 +335,31 @@ public class JPushModule extends ReactContextBaseJavaModule {
     }
 
     /**
-     *  JPush v3.0.7 Add this API
+     * JPush v3.0.7 Add this API
      * See document https://docs.jiguang.cn/jpush/client/Android/android_api/#aliastag for detail
      * Delete alias
+     *
      * @param callback callback
      */
     @ReactMethod
     public void deleteAlias(Callback callback) {
         int sequence = getSequence();
-        Logger.i(TAG,"Delete alias, sequence: " + sequence);
+        Logger.i(TAG, "Delete alias, sequence: " + sequence);
         sCacheMap.put(sequence, callback);
         JPushInterface.deleteAlias(getReactApplicationContext(), sequence);
     }
 
     /**
-     *  JPush v3.0.7 Add this API
+     * JPush v3.0.7 Add this API
      * See document https://docs.jiguang.cn/jpush/client/Android/android_api/#aliastag for detail
      * Get alias
+     *
      * @param callback callback
      */
     @ReactMethod
     public void getAlias(Callback callback) {
         int sequence = getSequence();
-        Logger.i(TAG,"Get alias, sequence: " + sequence);
+        Logger.i(TAG, "Get alias, sequence: " + sequence);
         sCacheMap.put(sequence, callback);
         JPushInterface.getAlias(getReactApplicationContext(), sequence);
     }
@@ -452,7 +463,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
             mContext = getCurrentActivity();
             ReadableArray array = map.getArray("days");
             Set<Integer> days = new HashSet<Integer>();
-            for (int i=0; i < array.size(); i++) {
+            for (int i = 0; i < array.size(); i++) {
                 days.add(array.getInt(i));
             }
             int startHour = map.getInt("startHour");
@@ -465,6 +476,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
 
     /**
      * Set silent push time
+     *
      * @param map must includes startTime and endTime property
      */
     @ReactMethod
@@ -528,6 +540,31 @@ public class JPushModule extends ReactContextBaseJavaModule {
                     mEvent = RECEIVE_CUSTOM_MESSAGE;
                     if (mRAC != null) {
                         sendEvent();
+                    } else {
+                        Intent resultIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+                        if (resultIntent == null)
+                            return;
+                        resultIntent.setAction(JPushInterface.ACTION_NOTIFICATION_OPENED);
+                        resultIntent.putExtra("extras", mCachedBundle.getString(JPushInterface.EXTRA_EXTRA));
+                        resultIntent.putExtra("message", message);
+
+                        PendingIntent resultPendingIntent = PendingIntent.getActivity(
+                                context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                        Notification.Builder nb = new Notification.Builder(context)
+                                .setContentTitle(message)
+                                .setSmallIcon(IdHelper.getDrawable(context, "ic_launcher"))
+                                .setAutoCancel(true)
+                                .setContentIntent(resultPendingIntent)
+                                .setDefaults(Notification.DEFAULT_ALL)
+                                .setContentText(message);
+
+                        NotificationManager notifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                        if (notifyManager != null)
+                            notifyManager.notify(0, nb.build());
+
+                        mCachedBundle = null;
+                        mEvent = null;
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -599,12 +636,12 @@ public class JPushModule extends ReactContextBaseJavaModule {
     public static class MyJPushMessageReceiver extends JPushMessageReceiver {
 
         @Override
-        public void onTagOperatorResult(Context context,JPushMessage jPushMessage) {
+        public void onTagOperatorResult(Context context, JPushMessage jPushMessage) {
             String log = "action - onTagOperatorResult, sequence:" + jPushMessage.getSequence()
                     + ", tags: " + jPushMessage.getTags();
             Logger.i(TAG, log);
             Logger.toast(context, log);
-            Logger.i(TAG,"tags size:"+jPushMessage.getTags().size());
+            Logger.i(TAG, "tags size:" + jPushMessage.getTags().size());
             Callback callback = sCacheMap.get(jPushMessage.getSequence());
             if (null != callback) {
                 WritableMap map = Arguments.createMap();
@@ -622,8 +659,9 @@ public class JPushModule extends ReactContextBaseJavaModule {
             }
             super.onTagOperatorResult(context, jPushMessage);
         }
+
         @Override
-        public void onCheckTagOperatorResult(Context context,JPushMessage jPushMessage){
+        public void onCheckTagOperatorResult(Context context, JPushMessage jPushMessage) {
             String log = "action - onCheckTagOperatorResult, sequence:" + jPushMessage.getSequence()
                     + ", checktag: " + jPushMessage.getCheckTag();
             Logger.i(TAG, log);
@@ -641,6 +679,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
             }
             super.onCheckTagOperatorResult(context, jPushMessage);
         }
+
         @Override
         public void onAliasOperatorResult(Context context, JPushMessage jPushMessage) {
             String log = "action - onAliasOperatorResult, sequence:" + jPushMessage.getSequence()
