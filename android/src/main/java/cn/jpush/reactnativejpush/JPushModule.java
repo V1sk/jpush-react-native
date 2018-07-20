@@ -10,6 +10,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.SparseArray;
 
 import com.facebook.react.bridge.Arguments;
@@ -165,6 +166,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
                     map.putInt("id", mCachedBundle.getInt(JPushInterface.EXTRA_NOTIFICATION_ID));
                     map.putString("message", mCachedBundle.getString(JPushInterface.EXTRA_MESSAGE));
                     map.putString("extras", mCachedBundle.getString(JPushInterface.EXTRA_EXTRA));
+                    map.putString("title", mCachedBundle.getString(JPushInterface.EXTRA_TITLE));
                     mRAC.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
                             .emit(mEvent, map);
                     break;
@@ -536,6 +538,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
                 mCachedBundle = data.getExtras();
                 try {
                     String message = data.getStringExtra(JPushInterface.EXTRA_MESSAGE);
+                    String title = data.getStringExtra(JPushInterface.EXTRA_TITLE);
                     Logger.i(TAG, "收到自定义消息: " + message);
                     mEvent = RECEIVE_CUSTOM_MESSAGE;
                     if (mRAC != null) {
@@ -551,8 +554,10 @@ public class JPushModule extends ReactContextBaseJavaModule {
                         PendingIntent resultPendingIntent = PendingIntent.getActivity(
                                 context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
+                        String titleStr = TextUtils.isEmpty(title) ? message : title;
+
                         Notification.Builder nb = new Notification.Builder(context)
-                                .setContentTitle(message)
+                                .setContentTitle(titleStr)
                                 .setSmallIcon(IdHelper.getDrawable(context, "ic_launcher"))
                                 .setAutoCancel(true)
                                 .setContentIntent(resultPendingIntent)
