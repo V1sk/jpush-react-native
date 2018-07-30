@@ -25,5 +25,6 @@ repositories {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
+    compile project(':baidu-speak')
     compile 'com.facebook.react:react-native:+'
 }

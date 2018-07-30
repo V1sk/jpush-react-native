@@ -24,6 +24,7 @@ import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.ibiliang.baidu_speak.BaiduSpeak;
 
 import org.json.JSONObject;
 
@@ -62,7 +63,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
     private static SparseArray<Callback> sCacheMap;
     private static Callback mGetRidCallback;
 
-    public JPushModule(ReactApplicationContext reactContext) {
+    public JPushModule(final ReactApplicationContext reactContext) {
         super(reactContext);
     }
 
@@ -532,7 +533,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
         }
 
         @Override
-        public void onReceive(Context context, Intent data) {
+        public void onReceive(final Context context, Intent data) {
 
             if (JPushInterface.ACTION_MESSAGE_RECEIVED.equals(data.getAction())) {
                 mCachedBundle = data.getExtras();
@@ -544,32 +545,18 @@ public class JPushModule extends ReactContextBaseJavaModule {
                     if (mRAC != null) {
                         sendEvent();
                     } else {
-                        Intent resultIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-                        if (resultIntent == null)
-                            return;
-                        resultIntent.setAction(JPushInterface.ACTION_NOTIFICATION_OPENED);
-                        resultIntent.putExtra("extras", mCachedBundle.getString(JPushInterface.EXTRA_EXTRA));
-                        resultIntent.putExtra("message", message);
+                        BaiduSpeak baiduSpeak = new BaiduSpeak(context, new BaiduSpeak.BaiduSpeakCallback() {
+                            @Override
+                            public void onStartSpeak() {
+                                showNotify(context);
+                            }
 
-                        PendingIntent resultPendingIntent = PendingIntent.getActivity(
-                                context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                        String titleStr = TextUtils.isEmpty(title) ? message : title;
-
-                        Notification.Builder nb = new Notification.Builder(context)
-                                .setContentTitle(titleStr)
-                                .setSmallIcon(IdHelper.getDrawable(context, "ic_launcher"))
-                                .setAutoCancel(true)
-                                .setContentIntent(resultPendingIntent)
-                                .setDefaults(Notification.DEFAULT_ALL)
-                                .setContentText(message);
-
-                        NotificationManager notifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-                        if (notifyManager != null)
-                            notifyManager.notify(0, nb.build());
-
-                        mCachedBundle = null;
-                        mEvent = null;
+                            @Override
+                            public void onError() {
+                                showNotify(context);
+                            }
+                        });
+                        baiduSpeak.getSpeechSynthesizer().speak(title);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -634,6 +621,38 @@ public class JPushModule extends ReactContextBaseJavaModule {
                     e.printStackTrace();
                 }
             }
+        }
+
+        private boolean showNotify(Context context) {
+            Intent resultIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+            if (resultIntent == null)
+                return true;
+            String message = mCachedBundle.getString(JPushInterface.EXTRA_MESSAGE);
+            String title = mCachedBundle.getString(JPushInterface.EXTRA_TITLE);
+            resultIntent.setAction(JPushInterface.ACTION_NOTIFICATION_OPENED);
+            resultIntent.putExtra("extras", mCachedBundle.getString(JPushInterface.EXTRA_EXTRA));
+            resultIntent.putExtra("message", message);
+
+            PendingIntent resultPendingIntent = PendingIntent.getActivity(
+                    context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+            String titleStr = TextUtils.isEmpty(title) ? message : title;
+
+            Notification.Builder nb = new Notification.Builder(context)
+                    .setContentTitle(titleStr)
+                    .setSmallIcon(IdHelper.getDrawable(context, "ic_launcher"))
+                    .setAutoCancel(true)
+                    .setContentIntent(resultPendingIntent)
+//                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setContentText(message);
+
+            NotificationManager notifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            if (notifyManager != null)
+                notifyManager.notify(0, nb.build());
+
+            mCachedBundle = null;
+            mEvent = null;
+            return false;
         }
 
     }
