@@ -529,6 +529,8 @@ public class JPushModule extends ReactContextBaseJavaModule {
      */
     public static class JPushReceiver extends BroadcastReceiver {
 
+        private BaiduSpeak baiduSpeak;
+
         public JPushReceiver() {
         }
 
@@ -545,17 +547,19 @@ public class JPushModule extends ReactContextBaseJavaModule {
                     if (mRAC != null) {
                         sendEvent();
                     } else {
-                        BaiduSpeak baiduSpeak = new BaiduSpeak(context, new BaiduSpeak.BaiduSpeakCallback() {
-                            @Override
-                            public void onStartSpeak() {
-                                showNotify(context);
-                            }
+                        if (baiduSpeak == null) {
+                            baiduSpeak = new BaiduSpeak(context, new BaiduSpeak.BaiduSpeakCallback() {
+                                @Override
+                                public void onStartSpeak() {
+                                    showNotify(context);
+                                }
 
-                            @Override
-                            public void onError() {
-                                showNotify(context);
-                            }
-                        });
+                                @Override
+                                public void onError() {
+                                    showNotify(context);
+                                }
+                            });
+                        }
                         baiduSpeak.getSpeechSynthesizer().speak(title);
                     }
                 } catch (Exception e) {
