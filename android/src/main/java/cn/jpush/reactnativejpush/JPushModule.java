@@ -24,7 +24,6 @@ import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.ibiliang.baidu_speak.BaiduSpeak;
 
 import org.json.JSONObject;
 
@@ -529,8 +528,6 @@ public class JPushModule extends ReactContextBaseJavaModule {
      */
     public static class JPushReceiver extends BroadcastReceiver {
 
-        private BaiduSpeak baiduSpeak;
-
         public JPushReceiver() {
         }
 
@@ -547,20 +544,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
                     if (mRAC != null) {
                         sendEvent();
                     } else {
-                        if (baiduSpeak == null) {
-                            baiduSpeak = new BaiduSpeak(context, new BaiduSpeak.BaiduSpeakCallback() {
-                                @Override
-                                public void onStartSpeak() {
-                                    showNotify(context);
-                                }
-
-                                @Override
-                                public void onError() {
-                                    showNotify(context);
-                                }
-                            });
-                        }
-                        baiduSpeak.getSpeechSynthesizer().speak(title);
+                        showNotify(context);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -647,7 +631,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
                     .setSmallIcon(IdHelper.getDrawable(context, "ic_launcher"))
                     .setAutoCancel(true)
                     .setContentIntent(resultPendingIntent)
-//                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setDefaults(Notification.DEFAULT_ALL)
                     .setContentText(message);
 
             NotificationManager notifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
