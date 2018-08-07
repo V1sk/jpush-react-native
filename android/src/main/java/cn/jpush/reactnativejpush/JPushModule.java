@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseArray;
 
 import com.facebook.react.bridge.Arguments;
@@ -24,6 +25,11 @@ import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.google.gson.Gson;
+import com.ibiliang.auto_click.AccessUtils;
+import com.ibiliang.auto_click.AutoExecuteService;
+import com.ibiliang.auto_click.data.DataManager;
+import com.ibiliang.auto_click.model.PushModel;
 
 import org.json.JSONObject;
 
@@ -61,6 +67,8 @@ public class JPushModule extends ReactContextBaseJavaModule {
 
     private static SparseArray<Callback> sCacheMap;
     private static Callback mGetRidCallback;
+
+    private static int notifyId = 0;
 
     public JPushModule(final ReactApplicationContext reactContext) {
         super(reactContext);
@@ -528,23 +536,37 @@ public class JPushModule extends ReactContextBaseJavaModule {
      */
     public static class JPushReceiver extends BroadcastReceiver {
 
+        private Gson mGson;
+
         public JPushReceiver() {
+            mGson = new Gson();
         }
 
         @Override
         public void onReceive(final Context context, Intent data) {
-
+            if (mRAC == null) {
+                if (AccessUtils.isAccessibilitySettingsOn(context) && DataManager.getInstance(context).isAutoClickOn())
+                    AutoExecuteService.start(context, null);
+            }
             if (JPushInterface.ACTION_MESSAGE_RECEIVED.equals(data.getAction())) {
                 mCachedBundle = data.getExtras();
                 try {
                     String message = data.getStringExtra(JPushInterface.EXTRA_MESSAGE);
                     String title = data.getStringExtra(JPushInterface.EXTRA_TITLE);
-                    Logger.i(TAG, "收到自定义消息: " + message);
+                    String extra = data.getStringExtra(JPushInterface.EXTRA_EXTRA);
+                    Log.i(TAG, "message: " + message);
+                    Log.i(TAG, "title: " + title);
+                    Log.i(TAG, "extra: " + extra);
                     mEvent = RECEIVE_CUSTOM_MESSAGE;
                     if (mRAC != null) {
                         sendEvent();
                     } else {
                         showNotify(context);
+                    }
+                    PushModel pushModel = mGson.fromJson(extra, PushModel.class);
+                    if (pushModel.isTouTiaoGrab() && AccessUtils.isAccessibilitySettingsOn(context)
+                            && DataManager.getInstance(context).isAutoClickOn()) {
+                        AutoExecuteService.start(context, pushModel);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -621,8 +643,10 @@ public class JPushModule extends ReactContextBaseJavaModule {
             resultIntent.putExtra("extras", mCachedBundle.getString(JPushInterface.EXTRA_EXTRA));
             resultIntent.putExtra("message", message);
 
+            ++notifyId;
+
             PendingIntent resultPendingIntent = PendingIntent.getActivity(
-                    context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    context, notifyId, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
             String titleStr = TextUtils.isEmpty(title) ? message : title;
 
@@ -636,7 +660,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
 
             NotificationManager notifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (notifyManager != null)
-                notifyManager.notify(0, nb.build());
+                notifyManager.notify(notifyId, nb.build());
 
             mCachedBundle = null;
             mEvent = null;
