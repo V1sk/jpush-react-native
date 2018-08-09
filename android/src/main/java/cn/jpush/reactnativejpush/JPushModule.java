@@ -3,7 +3,6 @@ package cn.jpush.reactnativejpush;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -650,17 +649,20 @@ public class JPushModule extends ReactContextBaseJavaModule {
 
             String titleStr = TextUtils.isEmpty(title) ? message : title;
 
-            Notification.Builder nb = new Notification.Builder(context)
-                    .setContentTitle(titleStr)
-                    .setSmallIcon(IdHelper.getDrawable(context, "ic_launcher"))
-                    .setAutoCancel(true)
-                    .setContentIntent(resultPendingIntent)
-                    .setDefaults(Notification.DEFAULT_ALL)
-                    .setContentText(message);
+            NotificationUtil notificationUtil = new NotificationUtil(context);
+            notificationUtil.sendNotification(titleStr, message, resultPendingIntent, notifyId);
 
-            NotificationManager notifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            if (notifyManager != null)
-                notifyManager.notify(notifyId, nb.build());
+//            Notification.Builder nb = new Notification.Builder(context)
+//                    .setContentTitle(titleStr)
+//                    .setSmallIcon(IdHelper.getDrawable(context, "ic_launcher"))
+//                    .setAutoCancel(true)
+//                    .setContentIntent(resultPendingIntent)
+//                    .setDefaults(Notification.DEFAULT_ALL)
+//                    .setContentText(message);
+//
+//            NotificationManager notifyManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+//            if (notifyManager != null)
+//                notifyManager.notify(notifyId, nb.build());
 
             mCachedBundle = null;
             mEvent = null;
