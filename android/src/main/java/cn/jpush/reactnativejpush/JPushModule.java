@@ -544,7 +544,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
         @Override
         public void onReceive(final Context context, Intent data) {
             if (mRAC == null) {
-                if (AccessUtils.isAccessibilitySettingsOn(context) && DataManager.getInstance(context).isAutoClickOn())
+                if (AccessUtils.isAccessibilitySettingsOn(context) && DataManager.getInstance(context).isTouTiaoAutoClickLikeOn())
                     AutoExecuteService.start(context, null);
             }
             if (JPushInterface.ACTION_MESSAGE_RECEIVED.equals(data.getAction())) {
@@ -563,8 +563,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
                         showNotify(context);
                     }
                     PushModel pushModel = mGson.fromJson(extra, PushModel.class);
-                    if (pushModel.isTouTiaoGrab() && AccessUtils.isAccessibilitySettingsOn(context)
-                            && DataManager.getInstance(context).isAutoClickOn()) {
+                    if (pushModel.isSupportAutoGrab()) {
                         AutoExecuteService.start(context, pushModel);
                     }
                 } catch (Exception e) {
