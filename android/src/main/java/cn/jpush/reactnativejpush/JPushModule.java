@@ -27,7 +27,6 @@ import com.facebook.react.modules.core.DeviceEventManagerModule;
 import com.google.gson.Gson;
 import com.ibiliang.auto_click.AccessUtils;
 import com.ibiliang.auto_click.AutoExecuteService;
-import com.ibiliang.auto_click.data.DataManager;
 import com.ibiliang.auto_click.model.PushModel;
 
 import org.json.JSONObject;
@@ -544,7 +543,7 @@ public class JPushModule extends ReactContextBaseJavaModule {
         @Override
         public void onReceive(final Context context, Intent data) {
             if (mRAC == null) {
-                if (AccessUtils.isAccessibilitySettingsOn(context) && DataManager.getInstance(context).isTouTiaoAutoClickLikeOn())
+                if (AccessUtils.isAccessibilitySettingsOn(context))
                     AutoExecuteService.start(context, null);
             }
             if (JPushInterface.ACTION_MESSAGE_RECEIVED.equals(data.getAction())) {
