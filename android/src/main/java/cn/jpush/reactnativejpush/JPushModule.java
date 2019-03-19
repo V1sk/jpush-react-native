@@ -24,10 +24,6 @@ import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.google.gson.Gson;
-import com.ibiliang.auto_click.AccessUtils;
-import com.ibiliang.auto_click.AutoExecuteService;
-import com.ibiliang.auto_click.model.PushModel;
 
 import org.json.JSONObject;
 
@@ -534,18 +530,18 @@ public class JPushModule extends ReactContextBaseJavaModule {
      */
     public static class JPushReceiver extends BroadcastReceiver {
 
-        private Gson mGson;
+//        private Gson mGson;
 
         public JPushReceiver() {
-            mGson = new Gson();
+//            mGson = new Gson();
         }
 
         @Override
         public void onReceive(final Context context, Intent data) {
-            if (mRAC == null) {
-                if (AccessUtils.isAccessibilitySettingsOn(context))
-                    AutoExecuteService.start(context, null);
-            }
+//            if (mRAC == null) {
+//                if (AccessUtils.isAccessibilitySettingsOn(context))
+//                    AutoExecuteService.start(context, null);
+//            }
             if (JPushInterface.ACTION_MESSAGE_RECEIVED.equals(data.getAction())) {
                 mCachedBundle = data.getExtras();
                 try {
@@ -561,10 +557,10 @@ public class JPushModule extends ReactContextBaseJavaModule {
                     } else {
                         showNotify(context);
                     }
-                    PushModel pushModel = mGson.fromJson(extra, PushModel.class);
-                    if (pushModel.isSupportAutoGrab()) {
-                        AutoExecuteService.start(context, pushModel);
-                    }
+//                    PushModel pushModel = mGson.fromJson(extra, PushModel.class);
+//                    if (pushModel.isSupportAutoGrab()) {
+//                        AutoExecuteService.start(context, pushModel);
+//                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
