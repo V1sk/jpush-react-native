@@ -1,29 +1,30 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+  compileSdkVersion rootProject.ext.compileSdkVersion
+  buildToolsVersion rootProject.ext.buildToolsVersion
 
-    defaultConfig {
-        minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
-    }
-    lintOptions {
-        abortOnError false
-        warning 'InvalidPackage'
-    }
-    sourceSets.main {
-        jniLibs.srcDirs = ['libs']
-    }
+  defaultConfig {
+    minSdkVersion rootProject.ext.minSdkVersion
+    targetSdkVersion rootProject.ext.targetSdkVersion
+    versionCode 1
+    versionName "1.0"
+  }
+  lintOptions {
+    abortOnError false
+    warning 'InvalidPackage'
+  }
+  sourceSets.main {
+    jniLibs.srcDirs = ['libs']
+  }
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.facebook.react:react-native:+'
+  api fileTree(include: ['*.jar'], dir: 'libs')
+  implementation 'com.facebook.react:react-native:+'
+  api 'com.oasisfeng.condom:library:2.5.0'
 }
